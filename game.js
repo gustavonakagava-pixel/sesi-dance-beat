@@ -73,7 +73,11 @@ function songTime(){
 // ---------- carregamento do beatmap ----------
 async function loadBeatmap(){
   try{
-    const r = await fetch('beatmap.json',{cache:'no-store'});
+    // timeout de 3.5s: se a rede pendurar, cai no fallback embutido
+    const ctrl = new AbortController();
+    const to = setTimeout(()=>ctrl.abort(), 3500);
+    const r = await fetch('beatmap.json',{cache:'no-store', signal:ctrl.signal});
+    clearTimeout(to);
     if(r.ok){ const j=await r.json(); if(j&&j.notes&&j.notes.length) return normalize(j); }
   }catch(e){}
   return EMBEDDED_BEATMAP;
@@ -84,19 +88,19 @@ function normalize(j){
 }
 // filtra e processa notas conforme o nível (minGap + contratempo no Mestre)
 function buildLevelNotes(diff){
-  let notes=[...beatmap.notes].sort((a,b)=>a.t-b.t);
+  let arr=[...beatmap.notes].sort((a,b)=>a.t-b.t);
   // aplicar filtro de espaçamento mínimo
   if(diff.minGap>0){
     const out=[]; let last=-99;
-    for(const n of notes){ if(n.t-last>=diff.minGap){ out.push(n); last=n.t; } }
-    notes=out;
+    for(const n of arr){ if(n.t-last>=diff.minGap){ out.push(n); last=n.t; } }
+    arr=out;
   }
   // contratempo (Mestre): insere notas no meio das batidas em pistas diferentes
   if(diff.contratempo){
     const withOffbeat=[];
-    for(let i=0; i<notes.length-1; i++){
-      const n1=notes[i];
-      const n2=notes[i+1];
+    for(let i=0; i<arr.length-1; i++){
+      const n1=arr[i];
+      const n2=arr[i+1];
       withOffbeat.push(n1);
       const dt=n2.t-n1.t;
       // se as próximas duas notas estão à batida (~0.46s a 129 BPM), insere contratempo no meio
@@ -105,10 +109,10 @@ function buildLevelNotes(diff){
         withOffbeat.push(offbeat);
       }
     }
-    if(notes.length>0) withOffbeat.push(notes[notes.length-1]);
-    notes=withOffbeat;
+    if(arr.length>0) withOffbeat.push(arr[arr.length-1]);
+    arr=withOffbeat;
   }
-  return notes;
+  return arr;
 }
 
 // ---------- dimensões ----------
@@ -125,13 +129,6 @@ function selectDiff(key){
   curDiffKey=key;
   const d=DIFFS[key];
   APPROACH=d.approach; W_PERFECT=d.wPerfect; W_GOOD=d.wGood; OFFSET=d.offset;
-  // regenera notas do beatmap conforme a dificuldade
-  notes=buildLevelNotes(d).map((n,i)=>({
-    t:n.t, l:n.l, judged:false,
-    el:createNoteEl(n.l, i)
-  }));
-  playfield.innerHTML='';  // limpa notes antigas
-  notes.forEach(n=>playfield.appendChild(n.el));
   document.querySelectorAll('.diff-card').forEach(c=>{
     c.classList.toggle('sel', c.dataset.diff===key);
   });
@@ -496,32 +493,27 @@ $('#cfgTest').addEventListener('click', ()=>{
 
 // ---------- boot ----------
 (async function init(){
+  function hideLoader(){ loader.classList.add('hidden'); }
+
+  // SEGURANÇA: o loader some em no máximo 1.2s, independente de rede/áudio/beatmap.
+  // Garante que a tela nunca trava em "Carregando faixa…".
+  const safetyTimeout = setTimeout(hideLoader, 1200);
+  // Loader também é tocável — saída de emergência imediata em qualquer aparelho
+  loader.addEventListener('pointerdown', ()=>{ clearTimeout(safetyTimeout); hideLoader(); }, {once:true});
+  loader.style.cursor='pointer';
+  const lp=$('#loader p');
+  if(lp) setTimeout(()=>{ if(!loader.classList.contains('hidden')) lp.textContent='Toque para continuar'; }, 900);
+
+  // carrega beatmap (com timeout interno + fallback embutido)
   beatmap=await loadBeatmap();
   selectDiff('medio');
   renderTeaser();
   try{ const last=localStorage.getItem('sesidanceLastName'); if(last) nameInput.value=last; }catch(e){}
   nameInput.addEventListener('change',()=>{ try{ localStorage.setItem('sesidanceLastName', nameInput.value.trim()); }catch(e){} });
 
-  function hideLoader(){ loader.classList.add('hidden'); }
-
-  // iOS Safari bloqueia carregamento de áudio até o usuário tocar.
-  // Não esperamos o áudio: após 600ms o loader some e o jogo aparece.
-  // O áudio será iniciado pelo toque em Jogar, como sempre.
-  const iosTimeout = setTimeout(hideLoader, 600);
-
-  // Se o áudio carregar antes (Android / desktop), hidrata mais cedo
-  const earlyEvents = ['loadedmetadata','loadeddata','canplay'];
-  earlyEvents.forEach(ev =>
-    audio.addEventListener(ev, ()=>{ clearTimeout(iosTimeout); hideLoader(); }, {once:true})
-  );
-
-  // Loader também é clicável/tocável — saída de emergência em qualquer aparelho
-  loader.addEventListener('pointerdown', hideLoader, {once:true});
-  loader.style.cursor='pointer';
-
-  // Atualiza texto do loader para deixar claro que pode tocar
-  const lp=$('#loader p');
-  if(lp) setTimeout(()=>{ if(!loader.classList.contains('hidden')) lp.textContent='Toque para continuar'; }, 1200);
+  // se tudo carregou rápido, esconde o loader já (antes do safety timeout)
+  clearTimeout(safetyTimeout);
+  hideLoader();
 })();
 
 })();
