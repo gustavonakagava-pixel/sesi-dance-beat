@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#041E42">
+<meta name="theme-color" content="#021A33">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SESI Dance Beat">
@@ -17,14 +17,16 @@
    branco, dourado neon (POSE). Mobile-first, 60 FPS.
    ============================================================ */
 :root{
-  --azul-fundo:#041E42;       /* fundo profundo SESI            */
-  --azul-fundo2:#062A5C;      /* fundo gradiente                */
-  --azul-sesi:#005EB8;        /* azul institucional SESI        */
-  --azul-claro:#6FB7FF;       /* azul de apoio                  */
-  --ciano:#19F0FF;            /* neon principal                 */
+  --azul-fundo:#021A33;       /* fundo profundo (banner do evento)  */
+  --azul-fundo2:#06294F;      /* fundo gradiente                    */
+  --azul-sesi:#005EB8;        /* azul institucional SESI            */
+  --azul-claro:#6FB7FF;       /* azul de apoio                      */
+  --ciano:#19F0FF;            /* neon principal                     */
+  --teal:#0FB8C9;             /* caixa do slogan (banner)           */
+  --vermelho:#D9112B;         /* vermelho SESI (banner)             */
   --branco:#FFFFFF;
-  --dourado:#FFC83D;          /* destaque POSE / batida forte   */
-  --erro:#FF4D6D;             /* feedback de erro               */
+  --dourado:#FFC83D;          /* destaque POSE / batida forte       */
+  --erro:#FF4D6D;             /* feedback de erro                   */
   --perfeito:#19F0FF;
   --bom:#6FB7FF;
   /* cores por pista */
@@ -86,13 +88,35 @@ body{
 /* ============================================================
    TELA INICIAL
    ============================================================ */
-#startScreen{justify-content:center;align-items:center;text-align:center;padding:24px;}
-#startScreen .logo-eyebrow{
-  font-size:13px;font-weight:600;letter-spacing:4px;
-  color:var(--azul-claro);text-transform:uppercase;margin-bottom:10px;opacity:.9;
+#startScreen{justify-content:center;align-items:center;text-align:center;padding:24px;position:relative;overflow:hidden;}
+/* recortes geométricos vermelhos, como nas bordas do banner do evento */
+#startScreen::before{
+  content:'';position:absolute;top:-40px;left:-40px;width:190px;height:190px;
+  background:linear-gradient(135deg,var(--vermelho) 0%,#8f0a1c 100%);
+  clip-path:polygon(0 0,100% 0,0 100%);opacity:.92;pointer-events:none;
 }
-#startScreen h1{font-size:clamp(40px,13vw,76px);margin:0;}
-#startScreen .sub{margin:6px 0 28px;color:#bcd6f5;font-weight:500;font-size:15px;}
+#startScreen::after{
+  content:'';position:absolute;bottom:-46px;right:-46px;width:210px;height:210px;
+  background:linear-gradient(315deg,var(--vermelho) 0%,#8f0a1c 100%);
+  clip-path:polygon(100% 100%,100% 0,0 100%);opacity:.85;pointer-events:none;
+}
+#startScreen .logo-eyebrow{
+  font-size:15px;font-weight:800;letter-spacing:6px;font-style:italic;
+  color:#fff;text-transform:uppercase;margin-bottom:2px;
+  text-shadow:0 0 14px rgba(25,240,255,.45);
+}
+.evt-logo{
+  width:min(72vw,340px);height:auto;display:block;margin:0 auto;
+  filter:drop-shadow(0 0 22px rgba(25,240,255,.35)) drop-shadow(0 4px 10px rgba(0,0,0,.4));
+}
+.evt-tag{
+  display:inline-block;margin:14px 0 6px;padding:9px 22px;border-radius:10px;
+  font-size:clamp(12px,3.4vw,16px);font-weight:800;letter-spacing:2.5px;color:#fff;
+  background:linear-gradient(90deg,#0a8fa0,var(--teal) 55%,#19d4e6);
+  box-shadow:0 4px 18px rgba(15,184,201,.45), inset 0 1px 0 rgba(255,255,255,.35);
+  font-style:italic;
+}
+#startScreen .sub{margin:10px 0 22px;color:#bcd6f5;font-weight:500;font-size:14px;}
 .equalizer{display:flex;gap:5px;align-items:flex-end;height:46px;margin:0 0 30px;}
 .equalizer span{
   width:6px;border-radius:4px;background:linear-gradient(180deg,var(--ciano),var(--azul-sesi));
@@ -299,6 +323,8 @@ body{
 .rank-table .dtag{font-weight:700;font-size:12px}
 .result-meta{margin:4px 0 14px;color:#bcd6f5;font-size:14px}
 .result-meta b{color:#fff}
+.evt-footer{margin-top:16px;font-size:11px;letter-spacing:1.5px;color:#7fa6d6;font-weight:700;}
+.evt-footer i{color:var(--teal);font-weight:700;}
 
 /* ---------- ranking: cabeçalho, modos e config ---------- */
 .rank-head-row{display:flex;align-items:center;justify-content:center;position:relative;}
@@ -331,13 +357,10 @@ body{
 
 <!-- ===================== TELA INICIAL ===================== -->
 <section id="startScreen" class="screen">
-  <div class="logo-eyebrow">SESI · Esporte, Lazer e Cultura</div>
-  <h1 class="brand">SESI <span class="neon">Dance</span> Beat</h1>
-  <p class="sub">Acompanhe o ritmo. Acerte a coreografia.</p>
-
-  <div class="equalizer" aria-hidden="true">
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-  </div>
+  <div class="logo-eyebrow">AQUECIMENTO</div>
+  <img class="evt-logo" src="logo.png" alt="SESI Dance">
+  <div class="evt-tag">MOVIMENTO QUE CONECTA</div>
+  <p class="sub">🎮 Dance Beat — acompanhe o ritmo, acerte a coreografia.</p>
 
   <div class="setup">
     <label class="field-label" for="nameInput">👤 Seu nome <span>(aparece no ranking)</span></label>
@@ -440,6 +463,7 @@ body{
     <button class="btn" id="againBtn">Jogar de novo</button>
     <button class="btn ghost" id="rankResultBtn" style="margin-top:10px;width:100%;padding:14px;">🏆 Ver ranking</button>
     <button class="btn ghost" id="homeBtn" style="margin-top:10px;width:100%;padding:14px;">Tela inicial</button>
+    <div class="evt-footer">AQUECIMENTO SESI DANCE · <i>Movimento que Conecta</i></div>
   </div>
 </section>
 
