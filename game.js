@@ -200,7 +200,7 @@ function loop(){
     const y=progress*hitY-32;
     n.el.style.transform='translate3d(0,'+y+'px,0)';
     // só vira erro quando a nota realmente passou da janela de acerto
-    if(now-OFFSET-n.t > W_GOOD+0.05){ n.judged=true; n.el.classList.add('gone'); registerMiss(); }
+    if(now-OFFSET-n.t > W_GOOD+0.05){ n.judged=true; n.el.classList.add('gone'); n.el.style.display='none'; registerMiss(); }
   }
   if(now>=dur){ endGame(); return; }
   rafId=requestAnimationFrame(loop);
@@ -235,7 +235,7 @@ function judgeLane(lane){
   // foi uma tentativa real: usa para calibrar a latência do aparelho
   learnLatency(raw-target.t);
   if(best>W_GOOD){ breakCombo(); feedback('ERRO','var(--erro)'); countMiss++; return; }
-  target.judged=true; target.el.classList.add('gone');
+  target.judged=true; target.el.classList.add('gone'); target.el.style.display='none';
   if(best<=W_PERFECT){ countPerfect++; addScore(PTS_PERFECT); combo++; feedback('PERFEITO','var(--perfeito)'); }
   else { countGood++; addScore(PTS_GOOD); combo++; feedback('BOM','var(--bom)'); }
   maxCombo=Math.max(maxCombo,combo); showCombo(); refreshHud();

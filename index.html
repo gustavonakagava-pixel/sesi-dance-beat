@@ -194,7 +194,13 @@ body{
 .note[data-lane="1"]{color:var(--l1)}
 .note[data-lane="2"]{color:var(--l2)}
 .note[data-lane="3"]{color:var(--l3)}
-.note.gone{transition:opacity .18s ease, transform .18s ease;opacity:0;}
+.note.gone{
+  opacity:0 !important;
+  visibility:hidden;
+  pointer-events:none;
+  box-shadow:none !important;
+  transition:none !important;
+}
 
 /* linha de acerto */
 .hitline{
