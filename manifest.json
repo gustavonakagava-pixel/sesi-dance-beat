@@ -1,0 +1,14 @@
+{
+  "name": "SESI Dance Beat",
+  "short_name": "SESI Dance",
+  "description": "Jogo de ritmo SESI Dance — acompanhe o beat e acerte a coreografia",
+  "start_url": "/sesi-dance-beat/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#041E42",
+  "theme_color": "#041E42",
+  "icons": [
+    { "src": "icon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

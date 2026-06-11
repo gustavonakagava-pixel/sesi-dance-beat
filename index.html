@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#041E42">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SESI Dance Beat">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>SESI Dance Beat</title>
+<style>
+/* ============================================================
+   SESI DANCE BEAT — refator para demonstração em evento
+   Paleta: azul SESI profundo, azul institucional, ciano neon,
+   branco, dourado neon (POSE). Mobile-first, 60 FPS.
+   ============================================================ */
+:root{
+  --azul-fundo:#041E42;       /* fundo profundo SESI            */
+  --azul-fundo2:#062A5C;      /* fundo gradiente                */
+  --azul-sesi:#005EB8;        /* azul institucional SESI        */
+  --azul-claro:#6FB7FF;       /* azul de apoio                  */
+  --ciano:#19F0FF;            /* neon principal                 */
+  --branco:#FFFFFF;
+  --dourado:#FFC83D;          /* destaque POSE / batida forte   */
+  --erro:#FF4D6D;             /* feedback de erro               */
+  --perfeito:#19F0FF;
+  --bom:#6FB7FF;
+  /* cores por pista */
+  --l0:#19F0FF;  /* palmas   */
+  --l1:#3D8BFF;  /* direita  */
+  --l2:#8A6CFF;  /* esquerda */
+  --l3:#FFC83D;  /* pose     */
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;margin:0;overflow:hidden;}
+body{
+  font-family:'Poppins','Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;
+  color:var(--branco);
+  background:
+    radial-gradient(120% 80% at 50% -10%, #0A3A7A 0%, transparent 60%),
+    linear-gradient(160deg, var(--azul-fundo) 0%, var(--azul-fundo2) 100%);
+  background-attachment:fixed;
+  user-select:none;-webkit-user-select:none;
+  touch-action:manipulation;
+}
+.screen{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+.hidden{display:none !important;}
+
+/* ---------- componentes base ---------- */
+.brand{
+  font-weight:800;letter-spacing:.5px;line-height:1;
+  background:linear-gradient(180deg,#fff 0%, var(--azul-claro) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.neon{
+  color:var(--ciano);
+  text-shadow:0 0 8px rgba(25,240,255,.7),0 0 22px rgba(25,240,255,.4);
+}
+.card{
+  background:linear-gradient(180deg, rgba(13,52,107,.85), rgba(7,30,70,.85));
+  border:1px solid rgba(111,183,255,.25);
+  border-radius:22px;
+  box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter:blur(6px);
+}
+.btn{
+  cursor:pointer;border:none;border-radius:16px;
+  font-family:inherit;font-weight:700;color:#04254f;
+  background:linear-gradient(180deg,var(--ciano),#06B6D4);
+  box-shadow:0 6px 22px rgba(25,240,255,.45), inset 0 1px 0 rgba(255,255,255,.5);
+  transition:transform .08s ease, filter .15s ease;
+}
+.btn:active{transform:translateY(2px) scale(.985);filter:brightness(1.08);}
+.btn.ghost{
+  background:transparent;color:#cfe6ff;
+  border:1px solid rgba(111,183,255,.4);box-shadow:none;
+}
+
+/* ============================================================
+   TELA INICIAL
+   ============================================================ */
+#startScreen{justify-content:center;align-items:center;text-align:center;padding:24px;}
+#startScreen .logo-eyebrow{
+  font-size:13px;font-weight:600;letter-spacing:4px;
+  color:var(--azul-claro);text-transform:uppercase;margin-bottom:10px;opacity:.9;
+}
+#startScreen h1{font-size:clamp(40px,13vw,76px);margin:0;}
+#startScreen .sub{margin:6px 0 28px;color:#bcd6f5;font-weight:500;font-size:15px;}
+.equalizer{display:flex;gap:5px;align-items:flex-end;height:46px;margin:0 0 30px;}
+.equalizer span{
+  width:6px;border-radius:4px;background:linear-gradient(180deg,var(--ciano),var(--azul-sesi));
+  animation:eq 1s ease-in-out infinite;
+}
+.equalizer span:nth-child(2){animation-delay:.12s}
+.equalizer span:nth-child(3){animation-delay:.24s}
+.equalizer span:nth-child(4){animation-delay:.36s}
+.equalizer span:nth-child(5){animation-delay:.48s}
+.equalizer span:nth-child(6){animation-delay:.18s}
+.equalizer span:nth-child(7){animation-delay:.30s}
+@keyframes eq{0%,100%{height:14px}50%{height:46px}}
+#playBtn{font-size:22px;padding:18px 56px;}
+.moves-legend{
+  display:flex;gap:10px;margin-top:34px;flex-wrap:wrap;justify-content:center;max-width:420px;
+}
+.moves-legend .mv{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:12px 14px;border-radius:16px;min-width:78px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(111,183,255,.18);
+}
+.moves-legend .mv b{font-size:26px;font-weight:400}
+.moves-legend .mv small{font-size:11px;color:#aacbf0;letter-spacing:.5px}
+.hint{margin-top:22px;font-size:12px;color:#7fa6d6;max-width:300px;line-height:1.5}
+
+/* ============================================================
+   JOGO
+   ============================================================ */
+#gameScreen{touch-action:none;}
+.hud{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 16px;
+}
+.hud .stat{flex:0 0 auto;}
+.hud .stat .lbl{font-size:10px;letter-spacing:2px;color:#8fb3e0;text-transform:uppercase;}
+.hud .stat .val{font-size:22px;font-weight:800;}
+.hud .progress-wrap{flex:1;height:8px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden;}
+.hud .progress-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--azul-sesi),var(--ciano));
+  box-shadow:0 0 12px rgba(25,240,255,.6);transition:width .08s linear;
+}
+
+#playfield{position:relative;flex:1;overflow:hidden;}
+.tracks{position:absolute;inset:0;display:flex;}
+.track{
+  flex:1;position:relative;
+  border-right:1px solid rgba(255,255,255,.06);
+}
+.track:last-child{border-right:none;}
+.track[data-lane="0"]{background:linear-gradient(180deg,rgba(25,240,255,.05),transparent);}
+.track[data-lane="1"]{background:linear-gradient(180deg,rgba(61,139,255,.05),transparent);}
+.track[data-lane="2"]{background:linear-gradient(180deg,rgba(138,108,255,.05),transparent);}
+.track[data-lane="3"]{background:linear-gradient(180deg,rgba(255,200,61,.06),transparent);}
+
+/* nota: posicionada por transform translate3d (GPU, 60fps) */
+.note{
+  position:absolute;left:50%;top:0;
+  width:64px;height:64px;margin-left:-32px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:34px;border-radius:18px;
+  will-change:transform;
+  background:rgba(255,255,255,.06);
+  border:2px solid currentColor;
+  box-shadow:0 0 14px currentColor, inset 0 0 10px rgba(255,255,255,.15);
+}
+.note[data-lane="0"]{color:var(--l0)}
+.note[data-lane="1"]{color:var(--l1)}
+.note[data-lane="2"]{color:var(--l2)}
+.note[data-lane="3"]{color:var(--l3)}
+.note.gone{transition:opacity .18s ease, transform .18s ease;opacity:0;}
+
+/* linha de acerto */
+.hitline{
+  position:absolute;left:0;right:0;height:0;
+  border-top:3px dashed rgba(255,255,255,.55);
+  box-shadow:0 0 18px rgba(25,240,255,.5);
+}
+.hit-targets{position:absolute;left:0;right:0;display:flex;}
+.hit-targets .target{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  height:72px;margin-top:-36px;
+}
+.hit-targets .ring{
+  width:62px;height:62px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.35);
+}
+
+/* combo central */
+#comboDisplay{
+  position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);
+  text-align:center;pointer-events:none;opacity:0;
+}
+#comboDisplay.show{animation:comboPop .25s ease;opacity:1;}
+#comboDisplay .num{font-size:64px;font-weight:800;line-height:1;}
+#comboDisplay .word{font-size:14px;letter-spacing:4px;color:#bcd6f5;}
+@keyframes comboPop{0%{transform:translate(-50%,-50%) scale(.6);opacity:0}60%{transform:translate(-50%,-50%) scale(1.12);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+
+/* feedback de julgamento */
+#judgeFeedback{
+  position:absolute;left:50%;top:52%;transform:translateX(-50%);
+  font-size:30px;font-weight:800;letter-spacing:1px;pointer-events:none;opacity:0;
+}
+#judgeFeedback.show{animation:judgeFx .45s ease;}
+@keyframes judgeFx{0%{opacity:0;transform:translateX(-50%) translateY(8px) scale(.9)}30%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.05)}100%{opacity:0;transform:translateX(-50%) translateY(-10px) scale(1)}}
+
+/* botões de toque */
+.pads{display:flex;gap:8px;padding:10px 10px calc(10px + env(safe-area-inset-bottom));}
+.pad{
+  flex:1;height:84px;border-radius:20px;border:none;cursor:pointer;
+  font-size:36px;color:#fff;font-family:inherit;touch-action:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+  border:1.5px solid rgba(255,255,255,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+  transition:transform .06s ease, box-shadow .12s ease, background .12s ease;
+}
+.pad[data-lane="0"]{box-shadow:inset 0 0 0 0, 0 0 0 0;}
+.pad.flash[data-lane="0"]{background:rgba(25,240,255,.35);box-shadow:0 0 26px var(--l0)}
+.pad.flash[data-lane="1"]{background:rgba(61,139,255,.35);box-shadow:0 0 26px var(--l1)}
+.pad.flash[data-lane="2"]{background:rgba(138,108,255,.35);box-shadow:0 0 26px var(--l2)}
+.pad.flash[data-lane="3"]{background:rgba(255,200,61,.35);box-shadow:0 0 26px var(--l3)}
+.pad:active{transform:translateY(3px) scale(.98);}
+.pad small{display:block;font-size:10px;letter-spacing:1.5px;color:#cfe6ff;margin-top:2px;font-weight:600}
+
+/* ============================================================
+   TELA DE RESULTADOS
+   ============================================================ */
+#resultScreen{justify-content:center;align-items:center;padding:24px;text-align:center;}
+#resultScreen .result-card{width:100%;max-width:380px;padding:30px 26px;}
+.medal{font-size:74px;line-height:1;margin-bottom:6px;
+  filter:drop-shadow(0 0 18px rgba(25,240,255,.6));animation:medalIn .5s ease;}
+@keyframes medalIn{0%{transform:scale(.4) rotate(-12deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+#resultScreen .medal-name{font-size:26px;font-weight:800;margin:0 0 2px;}
+#resultScreen .medal-sub{color:#aacbf0;font-size:13px;margin:0 0 22px;}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;}
+.res-grid .box{background:rgba(255,255,255,.05);border-radius:16px;padding:14px;border:1px solid rgba(111,183,255,.18);}
+.res-grid .box .lbl{font-size:10px;letter-spacing:2px;color:#8fb3e0;text-transform:uppercase;}
+.res-grid .box .val{font-size:28px;font-weight:800;}
+.res-grid .box.full{grid-column:1 / -1;}
+.breakdown{display:flex;justify-content:space-around;margin:16px 0 22px;font-size:13px;color:#bcd6f5;}
+.breakdown b{display:block;font-size:20px;color:#fff;}
+#resultScreen .btn{width:100%;padding:16px;font-size:17px;margin-top:6px;}
+
+/* loading */
+#loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:var(--azul-fundo);z-index:50;flex-direction:column;gap:16px;}
+#loader.hidden{display:none;}
+.spinner{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.15);
+  border-top-color:var(--ciano);animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loader p{color:#9fc0ea;font-size:13px;letter-spacing:1px;}
+
+/* ---------- setup: nome + níveis ---------- */
+.setup{width:100%;max-width:420px;margin-top:22px;}
+.field-label{display:block;text-align:left;font-size:13px;font-weight:700;color:#dCEaff;margin:0 0 6px 2px;}
+.field-label span{font-weight:500;color:#9fc0ea;font-size:12px;}
+.name-hint{text-align:left;font-size:12px;color:var(--erro);min-height:14px;margin:4px 0 8px 2px;font-weight:600;}
+.name-input{
+  width:100%;padding:14px 16px;border-radius:14px;font-family:inherit;font-size:16px;
+  color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(111,183,255,.3);
+  text-align:center;
+}
+.name-input::placeholder{color:#7fa6d6}
+.name-input:focus{outline:none;border-color:var(--ciano);box-shadow:0 0 0 3px rgba(25,240,255,.18)}
+.name-input.shake{animation:shake .4s; border-color:var(--erro);box-shadow:0 0 0 3px rgba(255,77,109,.25)}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.result-player{font-size:18px;font-weight:800;color:var(--ciano);margin-bottom:2px;text-shadow:0 0 12px rgba(25,240,255,.5)}
+.diff-select{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.diff-card{
+  cursor:pointer;border-radius:16px;padding:14px 6px;font-family:inherit;color:#cfe6ff;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(111,183,255,.2);
+  display:flex;flex-direction:column;gap:4px;align-items:center;transition:transform .08s,border-color .15s,background .15s;
+}
+.diff-card b{font-size:16px;color:#fff}
+.diff-card small{font-size:9.5px;color:#9fc0ea;line-height:1.25;text-align:center}
+.diff-card:active{transform:scale(.97)}
+.diff-card.sel{background:rgba(25,240,255,.14);border-color:var(--ciano);box-shadow:0 0 18px rgba(25,240,255,.3)}
+.diff-card[data-diff="facil"].sel{border-color:#39E66B;box-shadow:0 0 18px rgba(57,230,107,.35)}
+.diff-card[data-diff="dificil"].sel{border-color:var(--erro);box-shadow:0 0 18px rgba(255,77,109,.35)}
+
+/* ---------- ranking teaser (tela inicial) ---------- */
+.rank-teaser-card{width:100%;max-width:420px;margin-top:18px;padding:14px 16px;border-radius:18px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(111,183,255,.18);}
+.rank-teaser-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px;margin-bottom:8px;color:#dCEaff;}
+.link-btn{background:none;border:none;color:var(--ciano);font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;}
+.link-btn.danger{color:#FF8093;width:100%;padding:6px;}
+.teaser-row{display:flex;align-items:center;gap:10px;padding:6px 4px;border-top:1px solid rgba(255,255,255,.06);font-size:14px;}
+.teaser-row .pos{width:22px;text-align:center;font-weight:800}
+.teaser-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.teaser-row .sc{font-weight:800;color:var(--ciano)}
+.teaser-empty{color:#9fc0ea;font-size:13px;text-align:center;padding:6px}
+
+/* ---------- tela de ranking ---------- */
+#rankScreen{justify-content:center;align-items:center;padding:20px;}
+.rank-wrap{width:100%;max-width:440px;padding:24px 20px;}
+.rank-title{font-size:24px;margin:0;font-weight:800;text-align:center}
+.rank-sub{color:#aacbf0;font-size:13px;text-align:center;margin:4px 0 16px}
+.rank-table-wrap{max-height:55vh;overflow:auto;border-radius:14px;border:1px solid rgba(111,183,255,.15)}
+.rank-table{width:100%;border-collapse:collapse;font-size:14px}
+.rank-table th{position:sticky;top:0;background:#0b2a59;color:#aacbf0;font-size:11px;letter-spacing:1px;padding:10px 8px;text-align:left}
+.rank-table td{padding:11px 8px;border-bottom:1px solid rgba(255,255,255,.06)}
+.rank-table .rk-pos{font-size:16px;font-weight:800;width:36px;text-align:center}
+.rank-table .rk-score{font-weight:800;color:var(--ciano)}
+.rank-table .dtag{font-weight:700;font-size:12px}
+.result-meta{margin:4px 0 14px;color:#bcd6f5;font-size:14px}
+.result-meta b{color:#fff}
+
+/* ---------- ranking: cabeçalho, modos e config ---------- */
+.rank-head-row{display:flex;align-items:center;justify-content:center;position:relative;}
+.rank-head-row .rank-title{margin:0}
+.cfg-btn{position:absolute;right:0;top:0;background:rgba(255,255,255,.06);border:1px solid rgba(111,183,255,.25);
+  border-radius:10px;width:38px;height:38px;font-size:17px;cursor:pointer;color:#fff;}
+.cfg-btn:active{transform:scale(.94)}
+.mode-toggle{display:flex;gap:8px;margin:14px 0 6px;}
+.mode-btn{flex:1;padding:10px;border-radius:12px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;
+  color:#cfe6ff;background:rgba(255,255,255,.05);border:1px solid rgba(111,183,255,.2);transition:background .15s,border-color .15s;}
+.mode-btn.on{background:rgba(25,240,255,.16);border-color:var(--ciano);color:#fff}
+.mode-btn:disabled{opacity:.4;cursor:not-allowed}
+.cfg-panel{background:rgba(0,0,0,.22);border:1px solid rgba(111,183,255,.2);border-radius:14px;padding:14px;margin:10px 0;}
+.cfg-help{font-size:12px;color:#aacbf0;margin:0 0 10px;line-height:1.5}
+.cfg-row{display:flex;gap:8px}
+.cfg-msg{font-size:12px;color:#cfe6ff;margin:10px 0 0;min-height:16px}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;transition-duration:.05ms !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOADER ===================== -->
+<div id="loader">
+  <div class="spinner"></div>
+  <p>Carregando faixa…</p>
+</div>
+
+<!-- ===================== TELA INICIAL ===================== -->
+<section id="startScreen" class="screen">
+  <div class="logo-eyebrow">SESI · Esporte, Lazer e Cultura</div>
+  <h1 class="brand">SESI <span class="neon">Dance</span> Beat</h1>
+  <p class="sub">Acompanhe o ritmo. Acerte a coreografia.</p>
+
+  <div class="equalizer" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <div class="setup">
+    <label class="field-label" for="nameInput">👤 Seu nome <span>(aparece no ranking)</span></label>
+    <input id="nameInput" class="name-input" type="text" maxlength="16" placeholder="Digite seu nome" autocomplete="off">
+    <div id="nameHint" class="name-hint"></div>
+
+    <div class="field-label" style="margin-top:6px">🎚️ Dificuldade</div>
+    <div class="diff-select">
+      <button class="diff-card" data-diff="facil">
+        <b>Fácil</b><small>notas lentas · acerto fácil</small>
+      </button>
+      <button class="diff-card" data-diff="medio">
+        <b>Médio</b><small>ritmo equilibrado</small>
+      </button>
+      <button class="diff-card" data-diff="dificil">
+        <b>Difícil</b><small>rápido · poucas chances</small>
+      </button>
+    </div>
+  </div>
+
+  <button id="playBtn" class="btn">Jogar</button>
+
+  <div class="rank-teaser-card">
+    <div class="rank-teaser-head">
+      <span>🏆 Ranking</span>
+      <button id="rankBtn" class="link-btn">ver tudo</button>
+    </div>
+    <div id="rankTeaser"></div>
+  </div>
+
+  <div class="moves-legend">
+    <div class="mv"><b>👏</b><small>PALMAS</small></div>
+    <div class="mv"><b>🕺</b><small>DIREITA</small></div>
+    <div class="mv"><b>💃</b><small>ESQUERDA</small></div>
+    <div class="mv"><b>⭐</b><small>POSE</small></div>
+  </div>
+
+  <p class="hint">Toque na pista da nota quando ela cruzar a linha — vale tocar em qualquer altura da coluna. No computador use as teclas 1, 2, 3 e 4.</p>
+</section>
+
+<!-- ===================== JOGO ===================== -->
+<section id="gameScreen" class="screen hidden">
+  <div class="hud card" style="border-radius:0 0 18px 18px;margin:0 8px;">
+    <div class="stat"><div class="lbl">Pontos</div><div class="val" id="scoreVal">0</div></div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="stat" style="text-align:right"><div class="lbl">Combo</div><div class="val" id="comboVal">0</div></div>
+  </div>
+
+  <div id="playfield">
+    <div class="tracks">
+      <div class="track" data-lane="0"></div>
+      <div class="track" data-lane="1"></div>
+      <div class="track" data-lane="2"></div>
+      <div class="track" data-lane="3"></div>
+    </div>
+
+    <div class="hitline" id="hitline"></div>
+    <div class="hit-targets" id="hitTargets">
+      <div class="target"><div class="ring"></div></div>
+      <div class="target"><div class="ring"></div></div>
+      <div class="target"><div class="ring"></div></div>
+      <div class="target"><div class="ring"></div></div>
+    </div>
+
+    <div id="comboDisplay"><div class="num" id="comboNum">0</div><div class="word">COMBO</div></div>
+    <div id="judgeFeedback"></div>
+  </div>
+
+  <div class="pads">
+    <button class="pad" data-lane="0">👏<small>PALMAS</small></button>
+    <button class="pad" data-lane="1">🕺<small>DIREITA</small></button>
+    <button class="pad" data-lane="2">💃<small>ESQUERDA</small></button>
+    <button class="pad" data-lane="3">⭐<small>POSE</small></button>
+  </div>
+</section>
+
+<!-- ===================== RESULTADOS ===================== -->
+<section id="resultScreen" class="screen hidden">
+  <div class="result-card card">
+    <div class="result-player" id="rPlayer">Jogador</div>
+    <div class="medal" id="medalIcon">🏅</div>
+    <h2 class="medal-name" id="medalName">Participante</h2>
+    <p class="medal-sub" id="medalSub">Boa dança!</p>
+
+    <div class="res-grid">
+      <div class="box"><div class="lbl">Pontuação</div><div class="val" id="rScore">0</div></div>
+      <div class="box"><div class="lbl">Precisão</div><div class="val" id="rAcc">0%</div></div>
+      <div class="box"><div class="lbl">Maior combo</div><div class="val" id="rCombo">0</div></div>
+      <div class="box"><div class="lbl">No ranking</div><div class="val" id="rRankPos">#1</div></div>
+    </div>
+
+    <div class="result-meta">Nível: <b id="rDiffTag">Médio</b></div>
+
+    <div class="breakdown">
+      <div><b id="rPerf">0</b>Perfeito</div>
+      <div><b id="rGood">0</b>Bom</div>
+      <div><b id="rMiss">0</b>Erro</div>
+    </div>
+
+    <button class="btn" id="againBtn">Jogar de novo</button>
+    <button class="btn ghost" id="rankResultBtn" style="margin-top:10px;width:100%;padding:14px;">🏆 Ver ranking</button>
+    <button class="btn ghost" id="homeBtn" style="margin-top:10px;width:100%;padding:14px;">Tela inicial</button>
+  </div>
+</section>
+
+<!-- ===================== RANKING ===================== -->
+<section id="rankScreen" class="screen hidden">
+  <div class="rank-wrap card">
+    <div class="rank-head-row">
+      <h2 class="rank-title">🏆 Ranking</h2>
+      <button id="cfgBtn" class="cfg-btn" title="Configurar ranking online">⚙️</button>
+    </div>
+
+    <div class="mode-toggle">
+      <button id="modeGeral" class="mode-btn">🌐 Geral</button>
+      <button id="modeAparelho" class="mode-btn">📱 Aparelho</button>
+    </div>
+    <p class="rank-sub" id="rankStatus">Ranking local</p>
+
+    <div id="cfgPanel" class="cfg-panel hidden">
+      <p class="cfg-help">Cole a URL do app da Web do Google (termina em <b>/exec</b>). Veja o passo a passo no arquivo <b>RankingOnline.gs</b>.</p>
+      <input id="cfgUrl" class="name-input" type="text" placeholder="https://script.google.com/.../exec" style="margin-bottom:8px;font-size:13px;text-align:left">
+      <div class="cfg-row">
+        <button id="cfgTest" class="btn ghost" style="flex:1;padding:10px">Testar</button>
+        <button id="cfgSave" class="btn" style="flex:1;padding:10px">Salvar</button>
+      </div>
+      <p id="cfgTestMsg" class="cfg-msg"></p>
+    </div>
+
+    <div class="rank-table-wrap">
+      <table class="rank-table">
+        <thead><tr><th>#</th><th>Nome</th><th>Nível</th><th>Prec.</th><th>Pontos</th></tr></thead>
+        <tbody id="rankRows"></tbody>
+      </table>
+    </div>
+    <button class="btn" id="rankBackBtn" style="width:100%;padding:15px;margin-top:16px;">Voltar</button>
+    <button class="link-btn danger" id="clearRankBtn" style="margin-top:14px;">Limpar ranking deste aparelho</button>
+  </div>
+</section>
+
+<audio id="audio" src="sesidance.mp3" preload="auto"></audio>
+
+<script src="game.js"></script>
+</body>
+</html>
