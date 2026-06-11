@@ -6,9 +6,6 @@
 <meta name="theme-color" content="#021A33">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="SESI Dance Beat">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.png">
 <title>SESI Dance Beat</title>
 <style>
 /* ============================================================
@@ -284,7 +281,7 @@ body{
 .name-input.shake{animation:shake .4s; border-color:var(--erro);box-shadow:0 0 0 3px rgba(255,77,109,.25)}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .result-player{font-size:18px;font-weight:800;color:var(--ciano);margin-bottom:2px;text-shadow:0 0 12px rgba(25,240,255,.5)}
-.diff-select{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.diff-select{display:grid;grid-template-columns:repeat(2, 1fr);gap:8px;}
 .diff-card{
   cursor:pointer;border-radius:16px;padding:14px 6px;font-family:inherit;color:#cfe6ff;
   background:rgba(255,255,255,.04);border:1.5px solid rgba(111,183,255,.2);
@@ -296,6 +293,7 @@ body{
 .diff-card.sel{background:rgba(25,240,255,.14);border-color:var(--ciano);box-shadow:0 0 18px rgba(25,240,255,.3)}
 .diff-card[data-diff="facil"].sel{border-color:#39E66B;box-shadow:0 0 18px rgba(57,230,107,.35)}
 .diff-card[data-diff="dificil"].sel{border-color:var(--erro);box-shadow:0 0 18px rgba(255,77,109,.35)}
+.diff-card[data-diff="mestre"].sel{border-color:#D9112B;box-shadow:0 0 18px rgba(217,17,43,.4)}
 
 /* ---------- ranking teaser (tela inicial) ---------- */
 .rank-teaser-card{width:100%;max-width:420px;margin-top:18px;padding:14px 16px;border-radius:18px;
@@ -377,6 +375,9 @@ body{
       </button>
       <button class="diff-card" data-diff="dificil">
         <b>Difícil</b><small>rápido · poucas chances</small>
+      </button>
+      <button class="diff-card" data-diff="mestre">
+        <b>Mestre</b><small>tempo + contratempo · extremo</small>
       </button>
     </div>
   </div>

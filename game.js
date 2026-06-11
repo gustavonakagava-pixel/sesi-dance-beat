@@ -20,6 +20,9 @@ const DIFFS = {
   facil:   { nome:'Fácil',   approach:2.6, wPerfect:0.160, wGood:0.320, offset:0.11, minGap:0.95, cor:'#39E66B' },
   medio:   { nome:'Médio',   approach:1.9, wPerfect:0.120, wGood:0.260, offset:0.10, minGap:0.48, cor:'#19F0FF' },
   dificil: { nome:'Difícil', approach:1.4, wPerfect:0.090, wGood:0.200, offset:0.09, minGap:0.00, cor:'#FF4D6D' },
+  // Mestre do Beat: todas as batidas (tempo) + notas inseridas no contratempo,
+  // descendo mais rápido e com janelas de acerto mais apertadas que o Difícil.
+  mestre:  { nome:'Mestre',  approach:1.15,wPerfect:0.075, wGood:0.165, offset:0.09, minGap:0.00, contratempo:true, cor:'#D9112B' },
 };
 const PTS_PERFECT = 100, PTS_GOOD = 50;
 
@@ -79,13 +82,33 @@ function normalize(j){
   return { song:j.song, bpm:j.bpm, duration:j.duration,
     notes:j.notes.map(n=>('t' in n)?n:{t:n.time,l:n.lane}) };
 }
-// filtra notas conforme o espaçamento mínimo do nível
+// filtra e processa notas conforme o nível (minGap + contratempo no Mestre)
 function buildLevelNotes(diff){
-  const all=[...beatmap.notes].sort((a,b)=>a.t-b.t);
-  if(diff.minGap<=0) return all;
-  const out=[]; let last=-99;
-  for(const n of all){ if(n.t-last>=diff.minGap){ out.push(n); last=n.t; } }
-  return out;
+  let notes=[...beatmap.notes].sort((a,b)=>a.t-b.t);
+  // aplicar filtro de espaçamento mínimo
+  if(diff.minGap>0){
+    const out=[]; let last=-99;
+    for(const n of notes){ if(n.t-last>=diff.minGap){ out.push(n); last=n.t; } }
+    notes=out;
+  }
+  // contratempo (Mestre): insere notas no meio das batidas em pistas diferentes
+  if(diff.contratempo){
+    const withOffbeat=[];
+    for(let i=0; i<notes.length-1; i++){
+      const n1=notes[i];
+      const n2=notes[i+1];
+      withOffbeat.push(n1);
+      const dt=n2.t-n1.t;
+      // se as próximas duas notas estão à batida (~0.46s a 129 BPM), insere contratempo no meio
+      if(dt>0.42 && dt<0.54){
+        const offbeat={t:n1.t+dt/2, l:(n1.l+1)%4};  // pista diferente
+        withOffbeat.push(offbeat);
+      }
+    }
+    if(notes.length>0) withOffbeat.push(notes[notes.length-1]);
+    notes=withOffbeat;
+  }
+  return notes;
 }
 
 // ---------- dimensões ----------
@@ -102,6 +125,13 @@ function selectDiff(key){
   curDiffKey=key;
   const d=DIFFS[key];
   APPROACH=d.approach; W_PERFECT=d.wPerfect; W_GOOD=d.wGood; OFFSET=d.offset;
+  // regenera notas do beatmap conforme a dificuldade
+  notes=buildLevelNotes(d).map((n,i)=>({
+    t:n.t, l:n.l, judged:false,
+    el:createNoteEl(n.l, i)
+  }));
+  playfield.innerHTML='';  // limpa notes antigas
+  notes.forEach(n=>playfield.appendChild(n.el));
   document.querySelectorAll('.diff-card').forEach(c=>{
     c.classList.toggle('sel', c.dataset.diff===key);
   });
