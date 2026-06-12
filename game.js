@@ -9,6 +9,18 @@ const EMBEDDED_BEATMAP = {song:'sesidance.mp3',bpm:129.2,duration:78.48,approach
 (() => {
 'use strict';
 
+// altura real da janela via JS — funciona em qualquer iPhone, inclusive antigos
+// onde 100dvh não existe. Resolve a barra do Safari cortando os pads.
+function setAppHeight(){
+  const h = window.innerHeight;
+  document.documentElement.style.setProperty('--app-h', h + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', ()=>{ setAppHeight(); setTimeout(setAppHeight, 300); });
+// iOS atualiza innerHeight ao mostrar/esconder a barra; reforça após carregamento
+window.addEventListener('load', ()=>setTimeout(setAppHeight, 100));
+
 const ICONS = ['👏','🕺','💃','⭐'];
 
 // ---------- níveis de dificuldade ----------
