@@ -63,11 +63,30 @@ let hitY = 0, fieldH = 0;
 let score=0, combo=0, maxCombo=0;
 let countPerfect=0, countGood=0, countMiss=0;
 
-// relógio robusto
-let clockStart=0, audioActive=false, lastAudioTime=0;
+// relógio robusto e monotônico — nunca congela, mesmo se o áudio travar (buffering 4G)
+let clockStart=0, audioActive=false, lastAudioTime=0, lastAudioCheck=0, monoTime=0;
 function songTime(){
-  if(audioActive && !audio.paused && audio.currentTime>0) return audio.currentTime;
-  return (performance.now()-clockStart)/1000;
+  const wall=(performance.now()-clockStart)/1000;   // relógio de parede (nunca para)
+  if(audioActive && !audio.paused && audio.currentTime>0){
+    const at=audio.currentTime;
+    // se o áudio está avançando normalmente, sincroniza por ele
+    if(at>lastAudioTime+0.001){
+      // se voltou de um travamento com salto grande, segue suave pelo relógio
+      const expected = lastAudioTime + (wall - lastAudioCheck);
+      if(lastAudioCheck>0 && Math.abs(at-expected)>0.35){
+        lastAudioTime=at; lastAudioCheck=wall; monoTime=expected;
+        return monoTime;
+      }
+      lastAudioTime=at;
+      lastAudioCheck=wall;
+      monoTime=at;
+      return at;
+    }
+    // áudio travou (buffering): continua contando pelo relógio de parede
+    monoTime = lastAudioTime + (wall - lastAudioCheck);
+    return monoTime;
+  }
+  return wall;
 }
 
 // ---------- carregamento do beatmap ----------
@@ -174,10 +193,10 @@ function startGame(){
   buildNotes();
   audio.currentTime=0;
   clockStart=performance.now();
-  audioActive=false;
+  audioActive=false; lastAudioTime=0; lastAudioCheck=0; monoTime=0;
   const p=audio.play();
   if(p&&p.then){
-    p.then(()=>{ audioActive=true; clockStart=performance.now()-audio.currentTime*1000; })
+    p.then(()=>{ audioActive=true; lastAudioCheck=(performance.now()-clockStart)/1000; })
      .catch(()=>{ audioActive=false; });
   }
   running=true;

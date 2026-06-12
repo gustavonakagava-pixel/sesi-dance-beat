@@ -237,10 +237,10 @@ body{
 @keyframes judgeFx{0%{opacity:0;transform:translateX(-50%) translateY(8px) scale(.9)}30%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.05)}100%{opacity:0;transform:translateX(-50%) translateY(-10px) scale(1)}}
 
 /* botões de toque */
-.pads{display:flex;gap:8px;padding:10px 10px calc(10px + env(safe-area-inset-bottom));}
+.pads{display:flex;gap:8px;padding:8px 10px calc(14px + env(safe-area-inset-bottom));flex-shrink:0;}
 .pad{
-  flex:1;height:84px;border-radius:20px;border:none;cursor:pointer;
-  font-size:36px;color:#fff;font-family:inherit;touch-action:none;
+  flex:1;height:76px;border-radius:20px;border:none;cursor:pointer;
+  font-size:34px;color:#fff;font-family:inherit;touch-action:none;
   background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
   border:1.5px solid rgba(255,255,255,.18);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
